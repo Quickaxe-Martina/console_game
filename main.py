@@ -1,104 +1,25 @@
-import asyncio
 import curses
 import random
 import time
-from itertools import cycle
 
 from _curses import window
 
-from config import (
-    FRAMES,
-    MARGIN,
-    ROCKET_COLUMN_SPEED,
-    ROCKET_MARGIN,
-    ROCKET_ROWS_SPEED,
-    TIC_TIMEOUT,
-)
-from curses_tools import draw_frame, get_frame_size, read_controls
+from config import MARGIN, ROCKET_COLUMN_SPEED, ROCKET_ROWS_SPEED, TIC_TIMEOUT
+from figures.rocket import rocket
+from figures.space_garbage import fill_orbit_with_garbage
+from figures.stars import blink
 
 
-async def blink(
-    canvas: window,
-    row: int,
-    column: int,
-    symbol: str = "*",
-):
-    while True:
-        if random.randint(0, 1):
-            for time_sleep, style in FRAMES:
-                for _ in range(int(time_sleep * 10)):
-                    canvas.addstr(row, column, symbol, style)
-                    await asyncio.sleep(0)
-        else:
-            await asyncio.sleep(0)
+def draw(canvas: window) -> None:
+    """
+    Основная функция отрисовки на канве.
 
+    Parameters:
+    canvas (SimpleCanvas): Канва, на которой происходит отрисовка.
 
-async def rocket(
-    canvas: window,
-    start_row: int,
-    start_column: int,
-    rows_speed: int = 1,
-    columns_speed: int = 1,
-):
-    rocket_frame_1 = get_file_content("rocket_frame_1.txt")
-    rocket_frame_2 = get_file_content("rocket_frame_2.txt")
-
-    row = start_row
-    column = start_column
-
-    for frame in cycle(
-        (
-            rocket_frame_1,
-            rocket_frame_2,
-        )
-    ):
-        max_row, max_column = canvas.getmaxyx()
-        max_row -= ROCKET_MARGIN
-        max_column -= ROCKET_MARGIN + MARGIN
-
-        rows_direction, columns_direction, _ = read_controls(canvas=canvas)
-        row_new = row + rows_direction * rows_speed
-        column_new = column + columns_direction * columns_speed
-        frame_rows, frame_columns = get_frame_size(text=frame)
-
-        if not (ROCKET_MARGIN > row_new or max_row < row_new + frame_rows):
-            row = row_new
-        elif ROCKET_MARGIN > row_new:
-            row = ROCKET_MARGIN
-        elif max_row < row_new + frame_rows:
-            row = max_row - frame_rows
-
-        if not (ROCKET_MARGIN > column_new or max_column < column_new + frame_columns):
-            column = column_new
-        elif ROCKET_MARGIN > column_new:
-            column = ROCKET_MARGIN
-        elif max_column < column_new + frame_columns:
-            column = max_column - frame_columns
-
-        draw_frame(
-            canvas=canvas,
-            start_row=row,
-            start_column=column,
-            text=frame,
-            negative=False,
-        )
-        await asyncio.sleep(0)
-        draw_frame(
-            canvas=canvas,
-            start_row=row,
-            start_column=column,
-            text=frame,
-            negative=True,
-        )
-
-
-def get_file_content(file_path: str) -> str:
-    with open(file_path, "r") as my_file:
-        file_contents = my_file.read()
-    return file_contents
-
-
-def draw(canvas: window):
+    Returns:
+    None
+    """
     max_row, max_column = canvas.getmaxyx()
     canvas.border()
     curses.curs_set(False)
@@ -123,6 +44,7 @@ def draw(canvas: window):
             columns_speed=ROCKET_COLUMN_SPEED,
         )
     )
+    coroutine_lst.append(fill_orbit_with_garbage(canvas=canvas))
 
     while True:
         for coroutine in coroutine_lst:
