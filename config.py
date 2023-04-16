@@ -2,7 +2,7 @@ import curses
 
 # Время в секундах между кадрами игры, оно используется для ограничения количества обновлений экрана
 # и поддержания похожести на 60 кадров в секунду.
-TIC_TIMEOUT: float = 1.0 / 60.0
+TIC_TIMEOUT: float = 1.0 / 60
 
 # Отступ от краев экрана, который используется для размещения объектов игры внутри игрового поля.
 MARGIN: int = 2
@@ -32,3 +32,17 @@ GARBAGE_PATH_FRAMES = [
     "frames/garbage/trash_small.txt",
     "frames/garbage/trash_xl.txt",
 ]
+
+# Фазы игры
+PHRASES = {
+    1957: "First Sputnik",
+    1961: "Gagarin flew!",
+    1969: "Armstrong got on the moon!",
+    1971: "First orbital space station Salute-1",
+    1981: "Flight of the Shuttle Columbia",
+    1998: "ISS start building",
+    2011: "Messenger launch to Mercury",
+    2020: "Take the plasma gun! Shoot the garbage!",
+}
+
+DEBUG = True

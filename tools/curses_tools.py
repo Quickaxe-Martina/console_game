@@ -150,6 +150,20 @@ async def frame_sleep(
             start_row=row,
             start_column=column,
             text=text,
-            style=style,
             negative=True,
         )
+
+
+async def debug_log(canvas: window):
+    from globals import debug_objects
+
+    while True:
+        await frame_sleep(
+            canvas=canvas,
+            row=0,
+            column=0,
+            text="\n".join(debug_objects),
+            style=curses.color_pair(1) | curses.A_BOLD,
+            time_sleep=TIC_TIMEOUT,
+        )
+        canvas.refresh()
