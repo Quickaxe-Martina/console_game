@@ -46,20 +46,12 @@ async def rocket(
     row = start_row
     column = start_column
 
-    for clear_frame, frame in cycle(
+    for frame in cycle(
         (
-            (rocket_frame_2, rocket_frame_1),
-            (rocket_frame_1, rocket_frame_2),
+            rocket_frame_1,
+            rocket_frame_2,
         )
     ):
-        draw_frame(
-            canvas=canvas,
-            start_row=row,
-            start_column=column,
-            text=clear_frame,
-            negative=True,
-        )
-
         max_row, max_column = canvas.getmaxyx()
         max_row -= ROCKET_MARGIN
         max_column -= ROCKET_MARGIN + MARGIN
@@ -91,6 +83,13 @@ async def rocket(
             negative=False,
         )
         await asyncio.sleep(0)
+        draw_frame(
+            canvas=canvas,
+            start_row=row,
+            start_column=column,
+            text=frame,
+            negative=True,
+        )
 
 
 def get_file_content(file_path: str) -> str:
