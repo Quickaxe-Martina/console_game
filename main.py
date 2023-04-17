@@ -3,6 +3,7 @@ import curses
 import random
 import time
 from itertools import cycle
+from typing import Coroutine
 
 from _curses import window
 
@@ -18,22 +19,18 @@ from curses_tools import draw_frame, get_frame_size, read_controls
 
 
 async def blink(
-    canvas: window,
-    row: int,
-    column: int,
-    symbol: str = "*",
+    canvas: window, row: int, column: int, symbol: str = "*", offset_tics: int = 1
 ):
     while True:
-        if random.randint(0, 1):
-            for time_sleep, style in FRAMES:
-                for _ in range(int(time_sleep * 10)):
-                    canvas.addstr(row, column, symbol, style)
-                    await asyncio.sleep(0)
-        else:
+        for _ in range(offset_tics):
             await asyncio.sleep(0)
+        for time_sleep, style in FRAMES:
+            for _ in range(int(time_sleep * 10)):
+                canvas.addstr(row, column, symbol, style)
+                await asyncio.sleep(0)
 
 
-async def rocket(
+async def move_rocket(
     canvas: window,
     start_row: int,
     start_column: int,
@@ -49,6 +46,8 @@ async def rocket(
     for frame in cycle(
         (
             rocket_frame_1,
+            rocket_frame_1,
+            rocket_frame_2,
             rocket_frame_2,
         )
     ):
@@ -61,19 +60,8 @@ async def rocket(
         column_new = column + columns_direction * columns_speed
         frame_rows, frame_columns = get_frame_size(text=frame)
 
-        if not (ROCKET_MARGIN > row_new or max_row < row_new + frame_rows):
-            row = row_new
-        elif ROCKET_MARGIN > row_new:
-            row = ROCKET_MARGIN
-        elif max_row < row_new + frame_rows:
-            row = max_row - frame_rows
-
-        if not (ROCKET_MARGIN > column_new or max_column < column_new + frame_columns):
-            column = column_new
-        elif ROCKET_MARGIN > column_new:
-            column = ROCKET_MARGIN
-        elif max_column < column_new + frame_columns:
-            column = max_column - frame_columns
+        row = min(max(ROCKET_MARGIN, row_new), max_row - frame_rows)
+        column = min(max(ROCKET_MARGIN, column_new), max_column - frame_columns)
 
         draw_frame(
             canvas=canvas,
@@ -104,18 +92,19 @@ def draw(canvas: window):
     curses.curs_set(False)
     canvas.nodelay(True)
 
-    coroutine_lst = [
+    coroutine_lst: list[Coroutine] = [
         blink(
             canvas=canvas,
             row=random.randint(MARGIN, max_row - MARGIN),
             column=random.randint(MARGIN, max_column - MARGIN),
             symbol=random.choice("+*.:"),
+            offset_tics=random.randint(1, 10),
         )
         for _ in range(0, 100)
     ]
 
     coroutine_lst.append(
-        rocket(
+        move_rocket(
             canvas=canvas,
             start_row=max_row // 2,
             start_column=max_column // 2,
@@ -125,7 +114,7 @@ def draw(canvas: window):
     )
 
     while True:
-        for coroutine in coroutine_lst:
+        for coroutine in coroutine_lst.copy():
             try:
                 coroutine.send(None)
             except StopIteration:
