@@ -11,7 +11,7 @@ from tools.physics import update_speed
 from tools.tools import get_file_content
 
 
-async def rocket(
+async def move_rocket(
     canvas: window,
     start_row: int,
     start_column: int,
@@ -42,6 +42,8 @@ async def rocket(
     for frame in cycle(
         (
             rocket_frame_1,
+            rocket_frame_1,
+            rocket_frame_2,
             rocket_frame_2,
         )
     ):
@@ -81,19 +83,8 @@ async def rocket(
         frame_rows, frame_columns = get_frame_size(text=frame)
 
         # Обрабатываем граничные условия для движения ракеты
-        if not (ROCKET_MARGIN > row_new or max_row < row_new + frame_rows):
-            row = row_new
-        elif ROCKET_MARGIN > row_new:
-            row = ROCKET_MARGIN
-        elif max_row < row_new + frame_rows:
-            row = max_row - frame_rows
-
-        if not (ROCKET_MARGIN > column_new or max_column < column_new + frame_columns):
-            column = column_new
-        elif ROCKET_MARGIN > column_new:
-            column = ROCKET_MARGIN
-        elif max_column < column_new + frame_columns:
-            column = max_column - frame_columns
+        row = min(max(ROCKET_MARGIN, row_new), max_row - frame_rows)
+        column = min(max(ROCKET_MARGIN, column_new), max_column - frame_columns)
 
         # проверка столкновения ракеты с мусором
         for obstacle in obstacles:
@@ -112,5 +103,5 @@ async def rocket(
             row=row,
             column=column,
             text=frame,
-            time_sleep=TIC_TIMEOUT * 2,
+            time_sleep=TIC_TIMEOUT,
         )

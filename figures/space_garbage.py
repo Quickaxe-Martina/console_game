@@ -45,7 +45,7 @@ async def fill_orbit_with_garbage(canvas: window) -> None:
             await asyncio.sleep(0)
             continue
         # Обходим список корутин
-        for coroutine in coroutines:
+        for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
             # Удаляем корутину из списка при завершении выполнения корутины

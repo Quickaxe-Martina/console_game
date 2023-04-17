@@ -5,7 +5,7 @@ import time
 from _curses import window
 
 from config import DEBUG, MARGIN, TIC_TIMEOUT
-from figures.rocket import rocket
+from figures.rocket import move_rocket
 from figures.space_garbage import fill_orbit_with_garbage
 from figures.stars import blink
 from globals import coroutine_lst, obstacles
@@ -37,11 +37,12 @@ def draw(canvas: window) -> None:
                 row=random.randint(MARGIN, max_row - MARGIN),
                 column=random.randint(MARGIN, max_column - MARGIN),
                 symbol=random.choice("+*.:"),
+                offset_tics=random.randint(0, 10),
             )
         )
 
     coroutine_lst.append(
-        rocket(
+        move_rocket(
             canvas=canvas,
             start_row=max_row // 2,
             start_column=max_column // 2,
@@ -53,7 +54,7 @@ def draw(canvas: window) -> None:
         coroutine_lst.append(show_obstacles(canvas=canvas, obstacles=obstacles))
 
     while True:
-        for coroutine in coroutine_lst:
+        for coroutine in coroutine_lst.copy():
             try:
                 coroutine.send(None)
             except StopIteration:
